@@ -1,57 +1,55 @@
 package com.example.simplediary;
 
+import android.content.Context;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+
+import lib.kingja.switchbutton.SwitchMultiButton;
 
 
 /**
  * A simple {@link Fragment} subclass.
- * Use the {@link Fragment1#newInstance} factory method to
+ * Use the {@link Fragment1} factory method to
  * create an instance of this fragment.
  */
 public class Fragment1 extends Fragment {
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
+    RecyclerView recyclerView;
+    NoteAdapter adapter;
 
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
+    Context context;
+    OnTabItemSelectedListener listener;
 
-    public Fragment1() {
-        // Required empty public constructor
-    }
-
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment Fragment1.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static Fragment1 newInstance(String param1, String param2) {
-        Fragment1 fragment = new Fragment1();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
     }
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+
+        this.context = context;
+        if (context instanceof OnTabItemSelectedListener){
+            listener = (OnTabItemSelectedListener)context;
+        }
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        if (context != null){
+            context = null;
+            listener = null;
         }
     }
 
@@ -65,6 +63,41 @@ public class Fragment1 extends Fragment {
     }
 
     private void initUI(ViewGroup rootView){
+        Button todayWriteButton = rootView.findViewById(R.id.todayWriteButton);
+        todayWriteButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (listener != null){
+                    listener.onTabSelected(1);
+                }
+            }
+        });
 
+        SwitchMultiButton switchMultiButton = rootView.findViewById(R.id.switchButton);
+        switchMultiButton.setOnSwitchListener(new SwitchMultiButton.OnSwitchListener() {
+            @Override
+            public void onSwitch(int position, String tabText) {
+                adapter.switchLayout(position);
+                adapter.notifyDataSetChanged();
+            }
+        });
+
+        recyclerView = rootView.findViewById(R.id.recyclerView);
+
+        LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
+        recyclerView.setLayoutManager(layoutManager);
+
+        adapter = new NoteAdapter();
+        adapter.addItem(new Note(0,"0","강남구 삼성동", "","","오늘 너무 행목해!","0","capture1.jpg","2월10일"));
+        adapter.addItem(new Note(1,"1","강남구 삼성동", "","","친구와 재미있게 놀았어","0","capture1.jpg","2월11일"));
+        adapter.addItem(new Note(2,"0","강남구 역삼동", "","","집에 왔는데 너무 피곤해 ㅠㅠ","0",null,"2월13일"));
+
+        recyclerView.setAdapter(adapter);
+        adapter.setOnItemClickListener(new OnNoteItemClickListener() {
+            @Override
+            public void onItemClick(NoteAdapter.ViewHolder holder, View view, int position) {
+                Note item = adapter.getItem(position);
+            }
+        });
     }
 }
